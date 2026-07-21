@@ -31,6 +31,18 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP_TOKENS: int = 60
     TOP_K_RETRIEVAL: int = 5
 
+    RAGAS_ENABLED: bool = True
+    DEEPEVAL_ENABLED: bool = False
+    LANGSMITH_ENABLED: bool = False
+
+    LANGCHAIN_API_KEY: str | None = None
+    LANGCHAIN_TRACING_V2: bool = True
+    LANGCHAIN_PROJECT: str = "Production-RAG"
+    
+    GOOGLE_API_KEY: str | None = None
+
+    EVAL_JUDGE_MODEL: str = "llama-3.3-70b-versatile"  # Groq model used by all native/adapter LLM-judge calls
+
 
 # Instantiated ONCE at import time. Every other module does:
 #   from app.config import settings

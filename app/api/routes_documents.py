@@ -14,7 +14,7 @@ async def upload_document(file: UploadFile = File(...), db: Session = Depends(ge
 
     if not any(file.filename.lower().endswith(ext) for ext in allowed_extensions):
         raise HTTPException(
-            status_code=400,
+            status_code=400,      
             detail="Only PDF and DOCX files are allowed"
         )
     
@@ -60,5 +60,3 @@ def delete_document(document_id: str, db: Session = Depends(get_db)):
     db.delete(doc)                        # cascades to chunks/versions via FK
     db.commit()
     return {"status": "deleted", "document_id": document_id}
-
-

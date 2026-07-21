@@ -95,10 +95,11 @@ def query_similar(vector: list[float], top_k: int, document_id: str | None = Non
         filter=query_filter,
     )
     return [
-        {
-            "chunk_id": match["id"],
-            "score": match["score"],
-            "metadata": match.get("metadata", {}),
-        }
-        for match in result.get("matches", [])
-    ]
+    {
+        "chunk_id": match["id"],
+        "score": match["score"],
+        "text": match.get("metadata", {}).get("text", ""),
+        "metadata": match.get("metadata", {}),
+    }
+    for match in result.get("matches", [])
+]

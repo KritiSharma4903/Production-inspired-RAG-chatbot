@@ -1,6 +1,9 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import (Column, String, Integer, Text, TIMESTAMP, ForeignKey, ARRAY, UniqueConstraint, func)
+
+from sqlalchemy import (
+    Column, String, Integer, Text, TIMESTAMP, ForeignKey, ARRAY, UniqueConstraint, func, Float, Boolean
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -39,6 +42,7 @@ class Document(Base):
     last_error = Column(Text)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
     chunks = relationship("Chunk", back_populates="document", cascade="all, delete-orphan")
     versions = relationship("DocumentVersion", back_populates="document", cascade="all, delete-orphan")
 
@@ -116,3 +120,66 @@ class IngestionJob(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
     __table_args__ = (UniqueConstraint("document_id", "file_hash"),)
+
+
+class EvaluationRun(Base):
+    __tablename__ = "evaluation_runs"
+
+    run_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    experiment_name = Column(Text, nullable=False)
+    dataset_name = Column(Text, nullable=False)
+    evaluator_used = Column(Text, nullable=False)
+    total_questions = Column(Integer, nullable=False, default=0)
+
+    avg_context_precision = Column(Float)
+    avg_context_recall = Column(Float)
+    avg_context_relevancy = Column(Float)
+    avg_context_utilization = Column(Float)
+    avg_faithfulness = Column(Float)
+    avg_answer_relevancy = Column(Float)
+    avg_answer_correctness = Column(Float)
+    avg_semantic_similarity = Column(Float)
+    overall_score = Column(Float)
+
+    pass_count = Column(Integer, nullable=False, default=0)
+    fail_count = Column(Integer, nullable=False, default=0)
+    execution_time_sec = Column(Float)
+
+    status = Column(Text, nullable=False, default="running")
+    error_message = Column(Text)
+
+    started_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    finished_at = Column(TIMESTAMP(timezone=True))
+
+    results = relationship("EvaluationResult", back_populates="run", cascade="all, delete-orphan")
+
+
+class EvaluationResult(Base):
+    __tablename__ = "evaluation_results"
+
+    result_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    run_id = Column(UUID(as_uuid=True), ForeignKey("evaluation_runs.run_id", ondelete="CASCADE"))
+
+    question = Column(Text, nullable=False)
+    generated_answer = Column(Text)
+    ground_truth = Column(Text)
+    retrieved_contexts = Column(ARRAY(Text))
+
+    context_precision = Column(Float)
+    context_recall = Column(Float)
+    context_relevancy = Column(Float)
+    context_utilization = Column(Float)
+    faithfulness = Column(Float)
+    answer_relevancy = Column(Float)
+    answer_correctness = Column(Float)
+    semantic_similarity = Column(Float)
+
+    question_score = Column(Float)
+    passed = Column(Boolean)
+    latency_sec = Column(Float)
+    token_usage = Column(Integer)
+    error_message = Column(Text)
+
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+    run = relationship("EvaluationRun", back_populates="results")
